@@ -1,1 +1,4 @@
+# Ignore executable files
 *.exe
+*.o
+data/temp.txt

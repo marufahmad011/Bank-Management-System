@@ -1,18 +1,18 @@
 #ifndef ACCOUNT_H
 #define ACCOUNT_H
 
-struct Account {
-
+typedef struct {
     int accNo;
-    char name[100];
+    char name[50];
     int pin;
-    float balance;
+    double balance;
+} Account;
 
-};
-
+int isAccountExists(int accNo);
 void createAccount();
-void login();
-int accountExists(int);
-void checkBalance();
+int loginUser(Account *loggedInAcc);
+void updateProfile(Account *acc);
+void changePIN(Account *acc);
+void updateAccountInFile(Account updatedAcc);
 
 #endif
