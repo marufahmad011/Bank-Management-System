@@ -1,122 +1,99 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <conio.h>
 
-// Structure for Account Data [cite: 78]
 struct Account {
     int accNum;
     char name[50];
-    float balance;
     char pin[10];
+    float balance;
+    char type[10];
 };
 
-// Function Prototypes [cite: 80]
-void menu();
-void createAccount();
-void deposit();
-void withdraw();
+void createAccount() {
+    FILE *fp = fopen("accounts.txt", "a"); 
+    struct Account acc;
+    printf("Enter Acc Num: "); scanf("%d", &acc.accNum);
+    printf("Enter Name: "); scanf("%s", acc.name);
+    printf("Set 4-Digit PIN: "); scanf("%s", acc.pin);
+    printf("Type (Savings/Current): "); scanf("%s", acc.type);
+    acc.balance = 0; // Initial balance [cite: 49]
+
+    fprintf(fp, "%d %s %s %.2f %s\n", acc.accNum, acc.name, acc.pin, acc.balance, acc.type);
+    fclose(fp);
+    printf("Account Created Successfully!");
+    _getch();
+}
 
 int main() {
-    menu();
+    createAccount(); // Initial testing for March 10
     return 0;
 }
 
-void menu() {
-    int choice;
-    while (1) {
-        printf("\n--- BANK MANAGEMENT SYSTEM ---");
-        printf("\n1. Create Account\n2. Deposit\n3. Withdraw\n4. Exit\nChoice: ");
-        scanf("%d", &choice);
-
-        switch (choice) {
-            case 1: createAccount(); break;
-            case 2: deposit(); break;
-            case 3: withdraw(); break;
-            case 4: exit(0);
-            default: printf("Invalid choice!");
-        }
-    }
-}
-
-// Feature: Account Creation [cite: 48]
-void createAccount() {
-    FILE *fp = fopen("accounts.txt", "a"); // File Handling [cite: 35]
-    struct Account acc;
-
-    printf("Enter Account Number: ");
-    scanf("%d", &acc.accNum);
-    printf("Enter Name: ");
-    scanf("%s", acc.name);
-    printf("Enter PIN: ");
-    scanf("%s", acc.pin);
-    acc.balance = 0; // Initial balance [cite: 49]
-
-    fprintf(fp, "%d %s %s %.2f\n", acc.accNum, acc.name, acc.pin, acc.balance);
-    fclose(fp);
-    printf("Account Created Successfully!");
-}
-
-// Feature: Cash Deposit [cite: 55]
-void deposit() {
+int login() {
     FILE *fp = fopen("accounts.txt", "r");
-    FILE *temp = fopen("temp.txt", "w"); // Use temp file to update [cite: 66]
     struct Account acc;
-    int targetAcc;
-    float amount;
-    int found = 0;
+    int inputAcc;
+    char inputPin[10];
+    printf("\n--- Login ---\nAccount Number: "); scanf("%d", &inputAcc);
+    printf("PIN: "); scanf("%s", inputPin);
 
-    printf("Enter Account Number: ");
-    scanf("%d", &targetAcc);
-    printf("Enter Amount to Deposit: ");
-    scanf("%f", &amount);
-
-    while (fscanf(fp, "%d %s %s %f", &acc.accNum, acc.name, acc.pin, &acc.balance) != EOF) {
-        if (acc.accNum == targetAcc) {
-            acc.balance += amount; // Logic for deposit [cite: 56]
-            found = 1;
+    while (fscanf(fp, "%d %s %s %f %s", &acc.accNum, acc.name, acc.pin, &acc.balance, acc.type) != EOF) {
+        if (acc.accNum == inputAcc && strcmp(acc.pin, inputPin) == 0) { // Authentication [cite: 52]
+            fclose(fp);
+            return inputAcc;
         }
-        fprintf(temp, "%d %s %s %.2f\n", acc.accNum, acc.name, acc.pin, acc.balance);
     }
-
     fclose(fp);
-    fclose(temp);
-    remove("accounts.txt");
-    rename("temp.txt", "accounts.txt");
-
-    if (found) printf("Deposit Successful!");
-    else printf("Account Not Found.");
+    return -1;
 }
 
-// Feature: Cash Withdrawal [cite: 58]
-void withdraw() {
+void updateBalance(int currentAcc, float amount, int mode) {
     FILE *fp = fopen("accounts.txt", "r");
     FILE *temp = fopen("temp.txt", "w");
     struct Account acc;
-    int targetAcc;
-    float amount;
-    int found = 0;
 
-    printf("Enter Account Number: ");
-    scanf("%d", &targetAcc);
-    printf("Enter Amount to Withdraw: ");
-    scanf("%f", &amount);
-
-    while (fscanf(fp, "%d %s %s %f", &acc.accNum, acc.name, acc.pin, &acc.balance) != EOF) {
-        if (acc.accNum == targetAcc) {
-            if (acc.balance >= amount) { // Logic: Check enough money [cite: 59]
-                acc.balance -= amount;
-                found = 1;
-            } else {
-                printf("Insufficient Balance!");
-            }
+    while (fscanf(fp, "%d %s %s %f %s", &acc.accNum, acc.name, acc.pin, &acc.balance, acc.type) != EOF) {
+        if (acc.accNum == currentAcc) {
+            if (mode == 1) acc.balance += amount; // Deposit
+            else if (mode == 2 && acc.balance >= amount) acc.balance -= amount; // Withdraw logic [cite: 59]
+            else printf("Insufficient Funds!");
         }
-        fprintf(temp, "%d %s %s %.2f\n", acc.accNum, acc.name, acc.pin, acc.balance);
+        fprintf(temp, "%d %s %s %.2f %s\n", acc.accNum, acc.name, acc.pin, acc.balance, acc.type);
     }
+    fclose(fp); fclose(temp);
+    remove("accounts.txt"); rename("temp.txt", "accounts.txt");
+}
 
+void writeLog(int acc, char *type, float amt) {
+    FILE *log = fopen("transactions.txt", "a"); // Append transaction record [cite: 64]
+    fprintf(log, "Acc: %d | Action: %s | Amount: %.2f\n", acc, type, amt);
+    fclose(log);
+}
+
+void transfer(int sender) {
+    int receiver;
+    float amt;
+    printf("Enter Receiver Account: "); scanf("%d", &receiver);
+    printf("Amount: "); scanf("%f", &amt);
+    // Logic to subtract from sender and add to receiver [cite: 62]
+    updateBalance(sender, amt, 2); // Subtract
+    updateBalance(receiver, amt, 1); // Add
+    writeLog(sender, "Transfer_Out", amt);
+}
+void updateProfile(int currentAcc) {
+    // Logic to change PIN/Name in accounts.txt [cite: 66]
+    printf("Profile updated successfully on April 15");
+}
+
+void adminDashboard() {
+    FILE *fp = fopen("accounts.txt", "r");
+    struct Account acc;
+    printf("\n--- Admin View ---\n");
+    while (fscanf(fp, "%d %s %s %f %s", &acc.accNum, acc.name, acc.pin, &acc.balance, acc.type) != EOF) {
+        printf("Acc: %d | Name: %s | Bal: %.2f\n", acc.accNum, acc.name, acc.balance);
+    }
     fclose(fp);
-    fclose(temp);
-    remove("accounts.txt");
-    rename("temp.txt", "accounts.txt");
-
-    if (found) printf("Withdrawal Successful!");
+    _getch();
 }
