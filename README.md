@@ -7,7 +7,8 @@ This project was developed as the final semester project for **Software Developm
 * **Department:** Computer Science and Engineering (CSE)
 * **Semester:** 2nd | **Section:** 2C
 * **Supervised By:** Zarin Tasnim Rothy (Lecturer, Dept. of CSE)
-* **Developed By:** * Maruf Ahmad (ID: 42230100448)
+* **Developed By:**
+  * Maruf Ahmad (ID: 42230100448)
   * Uzzol Sing (ID: 42250302921)
 
 ---
